@@ -1,0 +1,5 @@
+ [requires]
+ websocketpp/0.8.2
+
+ [generators]
+ cmake
