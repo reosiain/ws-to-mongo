@@ -1,18 +1,23 @@
+#pragma once
 #ifndef WS_TO_MONGO_WEBSOCKET_H
 #define WS_TO_MONGO_WEBSOCKET_H
 
+#include <nlohmann/json.hpp>
 #include "string"
 #include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
+#include "msg_handler.h"
 
 typedef websocketpp::client<websocketpp::config::asio_tls_client> client;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
+typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
+
+
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+using json = nlohmann::json;
 
-// pull out the type of messages sent by our config
-typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
 
 
 context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
@@ -31,16 +36,19 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
     return ctx;
 }
 
-
 void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
 
     c->send(hdl, params, websocketpp::frame::opcode::text);
     std::cout << "Sent subscription params \n";
 };
 
-void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg) {
-//    c->get_alog().write(websocketpp::log::alevel::app, "Received Reply: " + msg->get_payload());
-    std::cout << "Received Reply: " + msg->get_payload() + "\n";
+void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
+
+    auto response = json::parse(msg->get_payload());
+    if (response["arg"]["channel"] == "candle1m"){
+        input->push_back(response);
+    };
+
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
@@ -55,10 +63,11 @@ void on_close(client* c, websocketpp::connection_hdl hdl) {
 
 class Ws {
 public:
-    Ws (std::string &w_a, std::string &p) {
+    Ws (std::string &w_a, std::string &p, std::vector<json> &input_container) {
 
         wss_address = w_a;
         params = p;
+        input = &input_container;
 
         m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
         m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
@@ -68,11 +77,7 @@ public:
 
     }
 
-    ~Ws() {
-        std::cout << "Destroyed";
-//        std::string reason = "kill";
-//        m_endpoint.close(con->get_handle(), websocketpp::close::status::normal, reason);
-    }
+    ~Ws() {}
 
     void connect() {
         websocketpp::lib::error_code ec;
@@ -95,7 +100,8 @@ public:
                 on_message,
                 &m_endpoint,
                 websocketpp::lib::placeholders::_1,
-                websocketpp::lib::placeholders::_2
+                websocketpp::lib::placeholders::_2,
+                input
         ));
         con->set_close_handler(websocketpp::lib::bind(
                 on_close,
@@ -113,6 +119,7 @@ private:
     std::string params;
     client m_endpoint;
     client::connection_ptr con;
+    std::vector<json> *input;
 
 };
 

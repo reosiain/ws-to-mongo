@@ -1,5 +1,10 @@
  [requires]
+ zlib/1.2.12
+ openssl/1.1.1n
+ boost/1.78.0
  websocketpp/0.8.2
+ mongo-cxx-driver/3.6.6
+ nlohmann_json/3.10.5
 
  [generators]
  cmake
