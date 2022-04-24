@@ -45,10 +45,16 @@ void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
 void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
 
     auto response = json::parse(msg->get_payload());
-    if (response["arg"]["channel"] == "candle1m"){
-        input->push_back(response);
-    };
-
+    std::cout << response << std::endl;
+    bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
+    bool cond2 = response.find("event") == response.end();
+    try {
+        if (cond1 and cond2) {
+            input->push_back(response);
+        };
+    }catch(json::out_of_range &e){
+        std::cout << e.what() << std::endl;
+    } ;
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
@@ -63,11 +69,11 @@ void on_close(client* c, websocketpp::connection_hdl hdl) {
 
 class Ws {
 public:
-    Ws (std::string &w_a, std::string &p, std::vector<json> &input_container) {
+    Ws (std::string &w_a, std::string &p, std::vector<json>* input_container) {
 
         wss_address = w_a;
         params = p;
-        input = &input_container;
+        input = input_container;
 
         m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
         m_endpoint.clear_error_channels(websocketpp::log::elevel::all);

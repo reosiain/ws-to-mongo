@@ -2,8 +2,9 @@
 #include "msg_handler.h"
 #include <vector>
 #include <thread>
+#include <fstream>
 
-void run_ws(std::string &url, std::string &params, std::vector<json> &input_container){
+void run_ws(std::string url, std::string params, std::vector<json>* input_container){
 
     try {
 
@@ -11,7 +12,7 @@ void run_ws(std::string &url, std::string &params, std::vector<json> &input_cont
         socket.connect();
 
     } catch (const std::exception & e) {
-        std::cout << e.what() << std::endl;
+        std::cerr << e.what() << std::endl;
     } catch (websocketpp::lib::error_code &e) {
         std::cout << e.message() << std::endl;
     } catch (...) {
@@ -20,7 +21,7 @@ void run_ws(std::string &url, std::string &params, std::vector<json> &input_cont
 
 };
 
-void run_pusher(std::string &db_url, std::vector<json> &input_container, std::vector<json> &output_container){
+void run_pusher(std::string db_url, std::vector<json>* input_container, std::vector<json>* output_container){
 
     try {
         MongoPusher C = MongoPusher(db_url);
@@ -31,25 +32,33 @@ void run_pusher(std::string &db_url, std::vector<json> &input_container, std::ve
 
 };
 
+mongocxx::instance MongoPusher::inst = mongocxx::instance{};
 
 int main() {
 
-    std::string url = "wss://wspap.okx.com:8443/ws/v5/public?brokerId=9999";
-    std::string db_url = "mongodb://localhost:27017";
-    std::string params = "{\n"
-                         "  \"op\": \"subscribe\",\n"
-                         "  \"args\": [\n"
-                         "    {\n"
-                         "      \"channel\": \"candle1m\",\n"
-                         "      \"instId\": \"DOT-USDT\"\n"
-                         "    }]}";
+    std::string url = "wss://wsaws.okex.com:8443/ws/v5/public";
+    std::string db_url = "mongodb://0.0.0.0:1002";
+    std::string params_path = "/Users/stbarkhatov/CLionProjects/ws-to-mongo/src/subscription.json";
 
-    std::vector<json> input_container(10);
-    std::vector<json> output_container(10);
 
-    std::thread run_ws(url, params, input_container);
-    std::thread run_pusher(db_url, input_container, output_container);
+    std::ifstream ifs(params_path.c_str());
+    json j = json::parse(ifs);
+    std::string params = j.dump();
 
+    std::vector<json> input_container;
+    std::vector<json> output_container;
+
+    std::vector<std::thread> threads;
+    std::thread thread_ws(run_ws, url, params, &input_container);
+    std::thread thread_pu(run_pusher, db_url, &input_container, &output_container);
+
+    threads.push_back(std::move(thread_ws));
+    threads.push_back(std::move(thread_pu));
+
+    for (auto& t : threads) {
+        t.join();
+        std::cout << "Thread started" << std::endl;
+    }
 
     return 0;
 }

@@ -16,78 +16,82 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/array.hpp>
 #include "websocket.h"
+#include <boost/stacktrace.hpp>
 
-
-using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::finalize;
-
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_document;
 using json = nlohmann::json;
 
 class MongoPusher{
 public:
     explicit MongoPusher (std::string &db_url){
 
-        mongocxx::uri uri(db_url);
-        mongocxx::client client(uri);
+        uri = mongocxx::uri(db_url);
+        client = mongocxx::client(uri);
 
-        db = client["mydb"];
-        coll = db["test"];
+        client.start_session();
+        collection = client["test"]["A"];
 
     }
 
-    void push_to_db(std::vector<json> &output_container){
+    void push_to_db(std::vector<json>* output_container){
 
         std::vector<bsoncxx::document::value> docs;
-        for(json elem : output_container) {
 
-            auto id = elem["args"]["instId"].get<std::string>();
-            auto dt = elem["data"][0][0].get<unsigned long long int>();
-            auto o = elem["data"][0][1].get<float>();
-            auto h = elem["data"][0][2].get<float>();
-            auto l = elem["data"][0][3].get<float>();
-            auto c = elem["data"][0][4].get<float>();
-            auto vol_count = elem["data"][0][5].get<float>();
-            auto vol_coin = elem["data"][0][6].get<float>();
+        for(auto&& elem : *output_container) {
+            auto instId= elem["arg"]["instId"].get<std::string>();
+            auto data = elem["data"].get<std::vector<std::vector<std::string>>>();
+            bsoncxx::document::value document = make_document(
+                    kvp("instId", instId),
+                    kvp("dt", std::stof(data[0][0])),
+                    kvp("o", std::stof(data[0][1])),
+                    kvp("h", std::stof(data[0][2])),
+                    kvp("l", std::stof(data[0][3])),
+                    kvp("c", std::stof(data[0][4])),
+                    kvp("vol_count", std::stof(data[0][5])),
+                    kvp("vol_coin", std::stof(data[0][6]))
+            );
 
-            auto d = document{} << "instId" << id
-                                  << "dt" << dt
-                                  << "o" << o
-                                  << "h" << h
-                                  << "l" << l
-                                  << "c" << c
-                                  << "vol_count" << vol_count
-                                  << "vol_coin" << vol_coin << finalize;
-
-            docs.push_back(d);
+            docs.push_back(document);
         };
+        std::vector<json> _c;
+        *output_container = _c;
+        collection.insert_many(docs);
 
-        coll.insert_many(docs);
-        output_container.clear();
+
+
     };
 
-    void monitor(std::vector<json> &input_container, std::vector<json> &output_container){
+    void monitor(std::vector<json>* input_container, std::vector<json>* output_container){
 
         try{
             while(true) {
 
-                if (input_container.size() == 10) {
+                if (input_container->size() >= 10) {
                     m.lock();
-                    std::move(input_container.begin(), input_container.end(), output_container.begin());
+                    *output_container = *input_container;
+                    std::vector<json> _c;
+                    *input_container = _c;
                     m.unlock();
                     push_to_db(output_container);
                 };
             };
 
         }catch(...) {
-                std::cout << "Unexpected error" << std::endl;
+                std::cout << "Unexpected error in pusher" << std::endl;
+                std::cout << boost::stacktrace::stacktrace();
             };
 
         };
 
 private:
     std::mutex m;
-    mongocxx::collection coll;
-    mongocxx::database db;
+    mongocxx::client client;
+    mongocxx::collection collection;
+    mongocxx::uri uri;
+    static mongocxx::instance inst;
+
 
 
 };
