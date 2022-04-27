@@ -4,7 +4,7 @@ project(ws_to_mongo)
 set(CMAKE_CXX_STANDARD 17)
 
 
-include(${CMAKE_SOURCE_DIR}/conanbuildinfo.cmake)
+include(${CMAKE_SOURCE_DIR}/build/conanbuildinfo.cmake)
 conan_basic_setup()
 
 add_executable(ws_to_mongo src/main.cpp src/websocket.h src/msg_handler.h)

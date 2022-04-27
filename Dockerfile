@@ -26,8 +26,8 @@ RUN apk add libc6-compat  && \
 
 WORKDIR /app/src
 
-RUN chmod +x ./build/bin/infra_cpp
+RUN chmod +x ./build/bin/ws_to_mongo
 
-CMD [ "./build/bin/infra_cpp" ]
+CMD [ "./build/bin/ws_to_mongo" ]
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
