@@ -17,4 +17,4 @@ jobs:
     
     - name: Create docker image
       shell: bash
-      run: cd ${{github.workspace}} && docker build -t reosiain/billy:ws_to_mongo
+      run: cd ${{github.workspace}} && docker build . -t reosiain/billy:ws_to_mongo
