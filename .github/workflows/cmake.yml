@@ -9,6 +9,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  CONAN_LIB_DIR: --install-folder 
 
 jobs:
   build:
@@ -22,10 +23,10 @@ jobs:
         mkdir build
         cd build
         pip install conan
-        conan install .. --build missing
+        conan install .. --build missing 
         
     - name: Echo envs
-      run: echo $CONAN_LIBS
+      run: echo ${{env.CONAN_LIBS}}
       
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
