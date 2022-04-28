@@ -36,9 +36,9 @@ mongocxx::instance MongoPusher::inst = mongocxx::instance{};
 
 int main() {
 
-    std::string url = std::getenv("WS_ADDRESS"); //"wss://wsaws.okex.com:8443/ws/v5/public";
-    std::string db_url = std::getenv("MONGO_URI"); //"mongodb://0.0.0.0:1002";
-    std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");// "/Users/stbarkhatov/CLionProjects/ws-to-mongo/src/subscription.json";
+    std::string url = std::getenv("WS_ADDRESS");
+    std::string db_url = std::getenv("MONGO_URI");
+    std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");
 
 
     std::ifstream ifs(params_path.c_str());
