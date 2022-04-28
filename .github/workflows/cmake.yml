@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
@@ -16,17 +15,20 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install
+    - name: Install conan
       shell: bash
       run: |
         mkdir build
         cd build
         pip install conan
-        conan install .. --build=missing
+
+    - name: Update profile
+      shell: bash
+      run: conan profile update settings.compiler.libcxx=libstdc++11 default
         
-    - name: Echo envs
-      run: echo "${{env.CONAN_LIBS}}"
-      
+    - name: Install dependencies
+      run: conan install .. --build=missing
+	
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
