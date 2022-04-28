@@ -25,7 +25,7 @@ jobs:
         conan install .. --build=missing
         
     - name: Echo envs
-      run: echo ${{env.CONAN_LIBS}}
+      run: echo "${{env.CONAN_LIBS}}"
       
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
