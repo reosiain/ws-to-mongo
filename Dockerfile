@@ -28,9 +28,7 @@ RUN apk add libc6-compat  && \
     apk add libstdc++ && \
     apk add libgcc && \
     apk add gcompat
-
-CMD [ "ls -lh /app/build" ]
-
+    
 RUN chmod +x /app/build/bin/ws_to_mongo
 
 CMD [ "./build/bin/ws_to_mongo" ]
