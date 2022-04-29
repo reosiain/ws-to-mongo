@@ -1,4 +1,4 @@
-name: CMake
+name: ci
 
 on:
   push:
@@ -10,11 +10,17 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Create docker image
-      shell: bash
-      run: cd ${{github.workspace}} && docker build . -t reosiain/billy:ws_to_mongo
+      - name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_LOGIN }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: reosiain/billy:ws_to_mongo
