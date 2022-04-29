@@ -17,7 +17,7 @@ RUN sudo chmod -R 777 /app/build
 
 RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
-RUN conan install /app --build=missing 
+RUN conan install /app --build=missing --install-folder=/app/build
 RUN cmake /app -DCMAKE_BUILD_TYPE=RELEASE && cmake --build /app
 
 FROM alpine:latest
