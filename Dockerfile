@@ -13,11 +13,11 @@ RUN mkdir /app/build
 USER conan
 RUN sudo chmod -R 777 /app
 RUN sudo chmod -R 777 /app/src
-RUN sudo chmod -R 777 /app/src/build
+RUN sudo chmod -R 777 /app/build
 
 RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
-RUN conan install ./src --build=missing --install-folder=./src/build
+RUN conan install ./src --build=missing --install-folder=./build
 RUN cd ./build
 RUN cmake .. -DCMAKE_BUILD_TYPE=RELEASE
 RUN cmake --build ..
