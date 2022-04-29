@@ -14,12 +14,11 @@ USER conan
 RUN sudo chmod -R 777 /app
 RUN sudo chmod -R 777 /app/src
 RUN sudo chmod -R 777 /app/build
-RUN cd ./build
 
 RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
 RUN conan install /app --build=missing 
-RUN cmake .. -DCMAKE_BUILD_TYPE=RELEASE && cmake --build ..
+RUN cmake /app -DCMAKE_BUILD_TYPE=RELEASE && cmake --build /app
 
 FROM alpine:latest
 
