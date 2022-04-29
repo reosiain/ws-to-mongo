@@ -19,7 +19,7 @@ RUN conan profile new default --detect
 RUN conan profile update settings.compiler.libcxx=libstdc++11 default
 RUN conan install ./src --build=missing --install-folder=./src/build
 RUN cmake ./src -DCMAKE_BUILD_TYPE=RELEASE
-RUN cmake --build ./src
+RUN cmake --build ./src/build
 
 FROM alpine:latest
 
