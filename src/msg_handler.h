@@ -71,11 +71,12 @@ public:
             while(true) {
 
                 if (input_container->size() >= 10) {
-                    m.lock();
+                    std::unique_lock<std::mutex> lck(m);
+                    lck.lock();
                     *output_container = *input_container;
                     std::vector<json> _c;
                     *input_container = _c;
-                    m.unlock();
+                    lck.unlock();
                     push_to_db(output_container);
                 };
             };
