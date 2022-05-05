@@ -76,7 +76,6 @@ public:
                     *output_container = *input_container;
                     std::vector<json> _c;
                     *input_container = _c;
-                    lck.unlock();
                     push_to_db(output_container);
                 };
             };
