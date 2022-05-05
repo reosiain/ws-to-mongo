@@ -31,4 +31,4 @@ RUN apk add libc6-compat  && \
     
 RUN chmod +x /app/bin/ws_to_mongo
 
-CMD [ "./bin/ws_to_mongo" ]
+CMD [ "app/bin/ws_to_mongo" ]
