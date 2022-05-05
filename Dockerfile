@@ -20,7 +20,7 @@ RUN conan profile update settings.compiler.libcxx=libstdc++11 default
 RUN conan install /app --build=missing --install-folder=/app/build
 RUN cmake /app -DCMAKE_BUILD_TYPE=RELEASE && cmake --build /app
 
-FROM alpine:latest
+FROM ubuntu:latest
 
 COPY --from=conan_distro /app /app
 
