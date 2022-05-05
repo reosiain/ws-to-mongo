@@ -10,6 +10,8 @@ conan_basic_setup()
 add_executable(ws_to_mongo src/main.cpp src/websocket.h src/msg_handler.h)
 target_compile_features(ws_to_mongo PRIVATE cxx_std_17)
 
+SET(CMAKE_CXX_FLAGS_RELEASE "... -lpthread")
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
