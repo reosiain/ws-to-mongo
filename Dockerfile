@@ -23,12 +23,6 @@ RUN cmake /app -DCMAKE_BUILD_TYPE=RELEASE && cmake --build /app
 FROM ubuntu:latest
 
 COPY --from=conan_distro /app /app
-
-RUN apk add libc6-compat  && \
-    apk add libstdc++ && \
-    apk add libgcc && \
-    apk add gcompat && \
-    apk add libnsl
     
 RUN chmod +x /app/bin/ws_to_mongo
 
