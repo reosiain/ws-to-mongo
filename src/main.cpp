@@ -60,9 +60,9 @@ int main() {
             t.join();
             std::cout << "Thread started" << std::endl;
         }
-    }catch(...) {
-        std::cout << "Unexpected error in main thread" << std::endl;
-        std::cout << boost::stacktrace::stacktrace();
+    }catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
     }
 
     return 0;
