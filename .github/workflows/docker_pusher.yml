@@ -3,11 +3,9 @@ name: ci
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
 
 jobs:
   docker:
