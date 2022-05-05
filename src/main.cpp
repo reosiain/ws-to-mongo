@@ -63,7 +63,7 @@ int main() {
         }
     }catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-        std:string st = boost::diagnostic_information(e);
+        std::string st = boost::diagnostic_information(e);
         std::cerr << st << '\n';
     }
 
