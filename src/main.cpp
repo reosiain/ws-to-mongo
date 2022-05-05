@@ -3,10 +3,7 @@
 #include <vector>
 #include <thread>
 #include <fstream>
-#include <boost/stacktrace.hpp>
-#include <boost/exception/all.hpp>
-
-typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+#include <boost/exception/diagnostic_information.hpp>
 
 void run_ws(std::string url, std::string params, std::vector<json>* input_container){
 
@@ -66,10 +63,8 @@ int main() {
         }
     }catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
-        const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
-        if (st) {
-            std::cerr << *st << '\n';
-        }
+        std:string st = boost::diagnostic_information(e);
+        std::cerr << st << '\n';
     }
 
     return 0;
