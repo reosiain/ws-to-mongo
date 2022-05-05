@@ -10,13 +10,12 @@ conan_basic_setup()
 add_executable(ws_to_mongo src/main.cpp src/websocket.h src/msg_handler.h)
 target_compile_features(ws_to_mongo PRIVATE cxx_std_17)
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-set(LIBS ${CONAN_LIBS} Threads::Threads)
-
-target_link_libraries(ws_to_mongo LIBS)
+target_link_libraries(ws_to_mongo pthread ${CONAN_LIBS})
