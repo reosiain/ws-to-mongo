@@ -29,7 +29,6 @@ public:
 
         uri = mongocxx::uri(db_url);
         client = mongocxx::client(uri);
-
 //        client.start_session();
         std::string db_name = std::getenv("DB_NAME");
         std::string db_coll = std::getenv("OHLC_COLLECTION_NAME");
