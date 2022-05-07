@@ -61,9 +61,6 @@ public:
         std::vector<json> _c;
         *output_container = _c;
         collection.insert_many(docs);
-        std::cout << collection.name() << std::endl;
-
-
 
     };
 
