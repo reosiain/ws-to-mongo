@@ -46,6 +46,9 @@ int main() {
         std::string db_url = std::getenv("MONGO_URI");
         std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");
 
+        std::cout << "Starting.." << std::endl;
+        std::cout << db_url << std::endl;
+
         std::ifstream ifs(params_path.c_str());
         json j = json::parse(ifs);
         std::string params = j.dump();
@@ -65,11 +68,8 @@ int main() {
             std::cout << "Thread started" << std::endl;
         }
     }catch (const std::exception& e) {
-        std::cerr << e.what() << '\n';
         std::string st = boost::diagnostic_information(e);
         std::cerr << st << '\n';
-        boost::this_thread::sleep(boost::posix_time::seconds(3));
-        return 1;
     }
 
     return 0;
