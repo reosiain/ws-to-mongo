@@ -45,7 +45,7 @@ void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
 void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
 
     auto response = json::parse(msg->get_payload());
-    std::cout << response << std::endl;
+//    std::cout << response << std::endl;
     bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
     bool cond2 = response.find("event") == response.end();
     try {

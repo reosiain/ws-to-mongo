@@ -16,7 +16,7 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/array.hpp>
 #include "websocket.h"
-#include <boost/stacktrace.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::basic::kvp;
@@ -60,6 +60,7 @@ public:
         std::vector<json> _c;
         *output_container = _c;
         collection.insert_many(docs);
+        std::cout << collection.name() << std::endl;
 
 
 
@@ -80,9 +81,10 @@ public:
                 };
             };
 
-        }catch(...) {
-                std::cout << "Unexpected error in pusher" << std::endl;
-                std::cout << boost::stacktrace::stacktrace();
+        }catch(const std::exception& e) {
+            std::cerr << e.what() << '\n';
+            std::string st = boost::diagnostic_information(e);
+            std::cerr << st << '\n';
             };
 
         };

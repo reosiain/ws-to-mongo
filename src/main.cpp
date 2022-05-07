@@ -27,8 +27,11 @@ void run_pusher(std::string db_url, std::vector<json>* input_container, std::vec
     try {
         MongoPusher C = MongoPusher(db_url);
         C.monitor(input_container, output_container);
-    } catch (...) {
-        std::cout << "Unexpected error in pusher" << std::endl;
+
+    } catch(const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        std::string st = boost::diagnostic_information(e);
+        std::cerr << st << '\n';
     };
 
 };
@@ -41,7 +44,6 @@ int main() {
         std::string url = std::getenv("WS_ADDRESS");
         std::string db_url = std::getenv("MONGO_URI");
         std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");
-
 
         std::ifstream ifs(params_path.c_str());
         json j = json::parse(ifs);
