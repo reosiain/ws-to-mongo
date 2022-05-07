@@ -4,7 +4,7 @@
 #include <thread>
 #include <fstream>
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/thread/thread.hpp>
+
 
 void run_ws(std::string url, std::string params, std::vector<json>* input_container){
 

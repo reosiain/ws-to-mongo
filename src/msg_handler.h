@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/stdx.hpp>
@@ -16,6 +17,7 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/array.hpp>
 #include "websocket.h"
+#include <boost/thread/thread.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 using bsoncxx::builder::stream::finalize;
@@ -72,11 +74,13 @@ public:
 
                 if (input_container->size() >= 10) {
                     std::unique_lock<std::mutex> lck(m);
-                    lck.lock();
+                    lck.unlock();
                     *output_container = *input_container;
                     std::vector<json> _c;
                     *input_container = _c;
                     push_to_db(output_container);
+                    lck.lock();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 };
             };
 
