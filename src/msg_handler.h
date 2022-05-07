@@ -34,7 +34,8 @@ public:
         client.start_session();
         std::string db_name = std::getenv("DB_NAME");
         std::string db_coll = std::getenv("OHLC_COLLECTION_NAME");
-        collection = client[db_name][db_coll];
+        mongocxx::database db = client[db_name];
+        collection = db[db_coll];
 
     }
 
