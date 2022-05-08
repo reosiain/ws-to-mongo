@@ -46,7 +46,8 @@ void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std
 
     auto response = json::parse(msg->get_payload());
 
-    if (!std::getenv("VERBOSE_MSG")){
+    std::string a = std::getenv("VERBOSE_MSG");
+    if (a=="True"){
         std::cout << response << std::endl;
     };
 
