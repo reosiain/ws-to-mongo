@@ -76,7 +76,18 @@ public:
                     *output_container = *input_container;
                     std::vector<json> _c;
                     *input_container = _c;
+
+                    std::string a = std::getenv("VERBOSE_MSG");
+                    if (a=="True"){
+                        std::cout << "Pushed" << std::endl;
+                    };
+
                     push_to_db(output_container);
+
+                    if (a=="True"){
+                        std::cout << "Really pushed" << std::endl;
+                    };
+
                     lck.lock();
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 };
