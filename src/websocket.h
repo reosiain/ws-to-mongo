@@ -56,6 +56,7 @@ void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std
     try {
         if (cond1 and cond2) {
             input->push_back(response);
+            std::cout << input->size() << std::endl;
         };
     }catch(json::out_of_range &e){
         std::cout << e.what() << std::endl;
