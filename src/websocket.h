@@ -53,9 +53,15 @@ void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std
 
     bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
     bool cond2 = response.find("event") == response.end();
+    bool cond_ping = ((float) std::rand() / RAND_MAX) < 0.15;
     try {
         if (cond1 and cond2) {
             input->push_back(response);
+        };
+
+        if (cond_ping) {
+            // Ping every 15% of messages. Sorry
+            c->ping(hdl, "ping");
         };
     }catch(json::out_of_range &e){
         std::cout << e.what() << std::endl;
