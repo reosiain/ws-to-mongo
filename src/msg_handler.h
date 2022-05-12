@@ -2,8 +2,6 @@
 #ifndef WS_TO_MONGO_MSG_HANDLER_H
 #define WS_TO_MONGO_MSG_HANDLER_H
 
-
-#include <mutex>
 #include <cstdint>
 #include <iostream>
 #include <vector>
@@ -38,7 +36,7 @@ public:
         collection = db[db_coll];
 
     }
-    ~MongoPusher(){BOOST_LOG_TRIVIAL(error) << "MongoPusher died";};
+    ~MongoPusher(){BOOST_LOG_SEV(lg, FATAL) << "MongoPusher died";};
 
     void push_to_db(std::vector<json>* output_container){
 
@@ -71,28 +69,27 @@ public:
         try{
             while(true) {
 
+                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                 if (input_container->size() >= 10) {
-                    std::unique_lock<std::mutex> lck(m);
-                    lck.unlock();
+                    boost::lock_guard<boost::mutex> lck(m);
                     *output_container = *input_container;
                     std::vector<json> _c;
                     *input_container = _c;
                     push_to_db(output_container);
-                    lck.lock();
                 };
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
             };
 
         }catch(const std::exception& e) {
-            BOOST_LOG_TRIVIAL(trace) << e.what() << '\n';
+            BOOST_LOG_SEV(lg, ERROR) << e.what() << '\n';
             std::string st = boost::diagnostic_information(e);
-            BOOST_LOG_TRIVIAL(trace) << st << '\n';
+            BOOST_LOG_SEV(lg, ERROR) << st << '\n';
             };
 
         };
 
 private:
-    std::mutex m;
+    boost::mutex m;
     mongocxx::client client;
     mongocxx::collection collection;
     mongocxx::uri uri;

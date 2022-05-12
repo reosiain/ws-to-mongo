@@ -31,7 +31,7 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 
         ctx->set_verify_mode(boost::asio::ssl::verify_none);
     } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
+        BOOST_LOG_SEV(lg, ERROR) << e.what();
     }
     return ctx;
 }
@@ -39,13 +39,13 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
 
     c->send(hdl, params, websocketpp::frame::opcode::text);
-    BOOST_LOG_TRIVIAL(info) << "Sent subscription params";
+    BOOST_LOG_SEV(lg, INFO) << "Sent subscription params";
 };
 
 void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
 
     auto response = json::parse(msg->get_payload());
-    BOOST_LOG_TRIVIAL(info) << response;
+    BOOST_LOG_SEV(lg, INFO) << response;
 
     bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
     bool cond2 = response.find("event") == response.end();
@@ -54,25 +54,24 @@ void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std
         if (cond1 and cond2) {
             input->push_back(response);
         };
-
 //        if (cond_ping) {
 //            // Ping every 15% of messages. Sorry
 //            c->ping(hdl, "ping");
 //        };
     }catch(json::out_of_range &e){
-        BOOST_LOG_TRIVIAL(warning) << e.what();
+        BOOST_LOG_SEV(lg, ERROR) << e.what();
     } ;
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Failed");
-    BOOST_LOG_TRIVIAL(error) << "Connection Failed";
+    BOOST_LOG_SEV(lg, FATAL) << "Connection Failed";
 }
 
 void on_close(client* c, websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Closed");
     c->close(hdl, websocketpp::close::status::normal, "");
-    BOOST_LOG_TRIVIAL(debug) << "Connection Closed";
+    BOOST_LOG_SEV(lg, DEBUG) << "Connection Closed";
 
 }
 

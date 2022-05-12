@@ -1,40 +1,42 @@
+#include <boost/thread.hpp>
 #include "logger.h"
 #include "websocket.h"
 #include "msg_handler.h"
 #include <vector>
-#include <thread>
 #include <fstream>
 #include <boost/exception/diagnostic_information.hpp>
 #include <stdlib.h>
 
 
-void run_ws(std::string url, std::string params, std::vector<json>* input_container){
+void run_ws(std::string url, std::string params, std::vector<json>* input_container, boost::barrier& bar){
 
     try {
 
         Ws socket = Ws(url, params, input_container);
+        bar.wait();
         socket.connect();
 
     } catch (const std::exception & e) {
-        BOOST_LOG_TRIVIAL(error) << e.what();
+        BOOST_LOG_SEV(lg, ERROR) << e.what();
     } catch (websocketpp::lib::error_code &e) {
-        BOOST_LOG_TRIVIAL(error) << e.message();
+        BOOST_LOG_SEV(lg, ERROR) << e.message();
     } catch (...) {
-        BOOST_LOG_TRIVIAL(fatal) << "Unexpected error";
+        BOOST_LOG_SEV(lg, ERROR) << "Unexpected error";
     };
 
 };
 
-void run_pusher(std::string db_url, std::vector<json>* input_container, std::vector<json>* output_container){
+void run_pusher(std::string db_url, std::vector<json>* input_container, std::vector<json>* output_container, boost::barrier& bar){
 
     try {
         MongoPusher C = MongoPusher(db_url);
+        bar.wait();
         C.monitor(input_container, output_container);
 
     } catch(const std::exception& e) {
-        BOOST_LOG_TRIVIAL(error) << e.what();
+        BOOST_LOG_SEV(lg, ERROR) << e.what();
         std::string st = boost::diagnostic_information(e);
-        BOOST_LOG_TRIVIAL(error) << st;
+        BOOST_LOG_SEV(lg, ERROR) << st;
     };
 
 };
@@ -50,8 +52,8 @@ int main() {
         std::string logger_path = std::getenv("WS_LOGGER_PATH");
 
         std::cout << "Starting..\n";
-        BOOST_LOG_TRIVIAL(debug) << db_url;
         init_logging(logger_path);
+        BOOST_LOG_SEV(lg, DEBUG) << db_url;
 
         std::ifstream ifs(params_path.c_str());
         json j = json::parse(ifs);
@@ -60,20 +62,16 @@ int main() {
         std::vector<json> input_container;
         std::vector<json> output_container;
 
-        std::vector<std::thread> threads;
-        std::thread thread_ws(run_ws, url, params, &input_container);
-        std::thread thread_pu(run_pusher, db_url, &input_container, &output_container);
+        boost::barrier bar(2);
+        boost::thread_group threads;
+        threads.create_thread(boost::bind(&run_ws, url, params, &input_container, boost::ref(bar)));
+        threads.create_thread(boost::bind(&run_pusher, db_url, &input_container, &output_container, boost::ref(bar)));
 
-        threads.push_back(std::move(thread_ws));
-        threads.push_back(std::move(thread_pu));
+        threads.join_all();
 
-        for (auto& t : threads) {
-            t.join();
-            BOOST_LOG_TRIVIAL(debug) << "Thread started";
-        }
     }catch (const std::exception& e) {
         std::string st = boost::diagnostic_information(e);
-        BOOST_LOG_TRIVIAL(error) << st;
+        BOOST_LOG_SEV(lg, FATAL) << st;
     }
 
     return 0;
