@@ -39,42 +39,40 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
 
     c->send(hdl, params, websocketpp::frame::opcode::text);
-    std::cout << "Sent subscription params \n";
+    BOOST_LOG_TRIVIAL(info) << "Sent subscription params";
 };
 
 void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
 
     auto response = json::parse(msg->get_payload());
-
-    std::string a = std::getenv("VERBOSE_MSG");
-    if (a=="True"){
-        std::cout << response << std::endl;
-    };
+    BOOST_LOG_TRIVIAL(info) << response;
 
     bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
     bool cond2 = response.find("event") == response.end();
-    bool cond_ping = ((float) std::rand() / RAND_MAX) < 0.15;
+//    bool cond_ping = ((float) std::rand() / RAND_MAX) < 0.15;
     try {
         if (cond1 and cond2) {
             input->push_back(response);
         };
 
-        if (cond_ping) {
-            // Ping every 15% of messages. Sorry
-            c->ping(hdl, "ping");
-        };
+//        if (cond_ping) {
+//            // Ping every 15% of messages. Sorry
+//            c->ping(hdl, "ping");
+//        };
     }catch(json::out_of_range &e){
-        std::cout << e.what() << std::endl;
+        BOOST_LOG_TRIVIAL(warning) << e.what();
     } ;
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Failed");
+    BOOST_LOG_TRIVIAL(error) << "Connection Failed";
 }
 
 void on_close(client* c, websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Closed");
     c->close(hdl, websocketpp::close::status::normal, "");
+    BOOST_LOG_TRIVIAL(debug) << "Connection Closed";
 
 }
 

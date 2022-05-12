@@ -1,3 +1,4 @@
+#include "logger.h"
 #include "websocket.h"
 #include "msg_handler.h"
 #include <vector>
@@ -15,11 +16,11 @@ void run_ws(std::string url, std::string params, std::vector<json>* input_contai
         socket.connect();
 
     } catch (const std::exception & e) {
-        std::cerr << e.what() << std::endl;
+        BOOST_LOG_TRIVIAL(error) << e.what();
     } catch (websocketpp::lib::error_code &e) {
-        std::cout << e.message() << std::endl;
+        BOOST_LOG_TRIVIAL(error) << e.message();
     } catch (...) {
-        std::cout << "Unexpected error" << std::endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Unexpected error";
     };
 
 };
@@ -31,9 +32,9 @@ void run_pusher(std::string db_url, std::vector<json>* input_container, std::vec
         C.monitor(input_container, output_container);
 
     } catch(const std::exception& e) {
-        std::cerr << e.what() << '\n';
+        BOOST_LOG_TRIVIAL(error) << e.what();
         std::string st = boost::diagnostic_information(e);
-        std::cerr << st << '\n';
+        BOOST_LOG_TRIVIAL(error) << st;
     };
 
 };
@@ -46,9 +47,11 @@ int main() {
         std::string url = std::getenv("WS_ADDRESS");
         std::string db_url = std::getenv("MONGO_URI");
         std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");
+        std::string logger_path = std::getenv("WS_LOGGER_PATH");
 
-        std::cout << "Starting.." << std::endl;
-        std::cout << db_url << std::endl;
+        std::cout << "Starting..\n";
+        BOOST_LOG_TRIVIAL(debug) << db_url;
+        init_logging(logger_path);
 
         std::ifstream ifs(params_path.c_str());
         json j = json::parse(ifs);
@@ -66,11 +69,11 @@ int main() {
 
         for (auto& t : threads) {
             t.join();
-            std::cout << "Thread started" << std::endl;
+            BOOST_LOG_TRIVIAL(debug) << "Thread started";
         }
     }catch (const std::exception& e) {
         std::string st = boost::diagnostic_information(e);
-        std::cerr << st << '\n';
+        BOOST_LOG_TRIVIAL(error) << st;
     }
 
     return 0;

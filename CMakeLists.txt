@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 include(${CMAKE_SOURCE_DIR}/build/conanbuildinfo.cmake)
 conan_basic_setup()
 
-add_executable(ws_to_mongo src/main.cpp src/websocket.h src/msg_handler.h)
+add_executable(ws_to_mongo src/main.cpp src/websocket.h src/msg_handler.h src/logger.h)
 target_compile_features(ws_to_mongo PRIVATE cxx_std_17)
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)

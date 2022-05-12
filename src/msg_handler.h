@@ -38,7 +38,7 @@ public:
         collection = db[db_coll];
 
     }
-    ~MongoPusher(){std::cout << "MongoPusher died\n";};
+    ~MongoPusher(){BOOST_LOG_TRIVIAL(error) << "MongoPusher died";};
 
     void push_to_db(std::vector<json>* output_container){
 
@@ -84,9 +84,9 @@ public:
             };
 
         }catch(const std::exception& e) {
-            std::cerr << e.what() << '\n';
+            BOOST_LOG_TRIVIAL(trace) << e.what() << '\n';
             std::string st = boost::diagnostic_information(e);
-            std::cerr << st << '\n';
+            BOOST_LOG_TRIVIAL(trace) << st << '\n';
             };
 
         };
