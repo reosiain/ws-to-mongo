@@ -2,8 +2,8 @@
 #ifndef WS_TO_MONGO_WEBSOCKET_H
 #define WS_TO_MONGO_WEBSOCKET_H
 
-#include <nlohmann/json.hpp>
 #include "string"
+#include <nlohmann/json.hpp>
 #include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
 #include "msg_handler.h"
@@ -17,7 +17,6 @@ using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 using json = nlohmann::json;
-
 
 
 context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
@@ -37,24 +36,23 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 }
 
 void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
-
     c->send(hdl, params, websocketpp::frame::opcode::text);
     BOOST_LOG_SEV(lg, INFO) << "Sent subscription params";
 };
 
-void on_message (client* c,websocketpp::connection_hdl hdl, message_ptr msg, std::vector<json> *input) {
+
+void on_message (client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
 
     auto response = json::parse(msg->get_payload());
     BOOST_LOG_SEV(lg, INFO) << response;
 
     bool cond1 = response.at("arg").at("channel").get<std::string>() == "candle1m";
     bool cond2 = response.find("event") == response.end();
-//    bool cond_ping = ((float) std::rand() / RAND_MAX) < 0.15;
     try {
         if (cond1 and cond2) {
-            input->push_back(response);
+            ProdCons.push(response);
         };
-//        if (cond_ping) {
+//        if (((float) std::rand() / RAND_MAX) < 0.15) {
 //            // Ping every 15% of messages. Sorry
 //            c->ping(hdl, "ping");
 //        };
@@ -77,11 +75,10 @@ void on_close(client* c, websocketpp::connection_hdl hdl) {
 
 class Ws {
 public:
-    Ws (std::string &w_a, std::string &p, std::vector<json>* input_container) {
+    Ws (std::string &w_a, std::string &p) {
 
         wss_address = w_a;
         params = p;
-        input = input_container;
 
         m_endpoint.clear_access_channels(websocketpp::log::alevel::all);
         m_endpoint.clear_error_channels(websocketpp::log::elevel::all);
@@ -91,7 +88,7 @@ public:
 
     }
 
-    ~Ws() {}
+    ~Ws() {BOOST_LOG_SEV(lg, FATAL) << "WS connector died";}
 
     void connect() {
         websocketpp::lib::error_code ec;
@@ -114,14 +111,14 @@ public:
                 on_message,
                 &m_endpoint,
                 websocketpp::lib::placeholders::_1,
-                websocketpp::lib::placeholders::_2,
-                input
+                websocketpp::lib::placeholders::_2
         ));
         con->set_close_handler(websocketpp::lib::bind(
                 on_close,
                 &m_endpoint,
                 websocketpp::lib::placeholders::_1
         ));
+        con->set_pong_timeout(10);
 
         m_endpoint.connect(con);
         m_endpoint.run();
@@ -133,7 +130,6 @@ private:
     std::string params;
     client m_endpoint;
     client::connection_ptr con;
-    std::vector<json> *input;
 
 };
 

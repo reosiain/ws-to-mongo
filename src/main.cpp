@@ -8,11 +8,11 @@
 #include <stdlib.h>
 
 
-void run_ws(std::string url, std::string params, std::vector<json>* input_container, boost::barrier& bar){
+void run_ws(std::string url, std::string params, boost::barrier& bar){
 
     try {
 
-        Ws socket = Ws(url, params, input_container);
+        Ws socket = Ws(url, params);
         bar.wait();
         socket.connect();
 
@@ -26,15 +26,14 @@ void run_ws(std::string url, std::string params, std::vector<json>* input_contai
 
 };
 
-void run_pusher(std::string db_url, std::vector<json>* input_container, std::vector<json>* output_container, boost::barrier& bar){
+void run_pusher(std::string db_url, boost::barrier& bar){
 
     try {
         MongoPusher C = MongoPusher(db_url);
         bar.wait();
-        C.monitor(input_container, output_container);
+        C.monitor();
 
     } catch(const std::exception& e) {
-        BOOST_LOG_SEV(lg, ERROR) << e.what();
         std::string st = boost::diagnostic_information(e);
         BOOST_LOG_SEV(lg, ERROR) << st;
     };
@@ -51,6 +50,7 @@ int main() {
         std::string params_path = std::getenv("SUBSCRIPTION_PARAMS");
         std::string logger_path = std::getenv("WS_LOGGER_PATH");
 
+
         std::cout << "Starting..\n";
         init_logging(logger_path);
         BOOST_LOG_SEV(lg, DEBUG) << db_url;
@@ -59,19 +59,18 @@ int main() {
         json j = json::parse(ifs);
         std::string params = j.dump();
 
-        std::vector<json> input_container;
-        std::vector<json> output_container;
-
+        ProducerConsumer ProdCons;
         boost::barrier bar(2);
         boost::thread_group threads;
-        threads.create_thread(boost::bind(&run_ws, url, params, &input_container, boost::ref(bar)));
-        threads.create_thread(boost::bind(&run_pusher, db_url, &input_container, &output_container, boost::ref(bar)));
+        threads.create_thread(boost::bind(&run_ws, url, params, boost::ref(bar)));
+        threads.create_thread(boost::bind(&run_pusher, db_url, boost::ref(bar)));
 
         threads.join_all();
 
     }catch (const std::exception& e) {
         std::string st = boost::diagnostic_information(e);
         BOOST_LOG_SEV(lg, FATAL) << st;
+        throw e;
     }
 
     return 0;

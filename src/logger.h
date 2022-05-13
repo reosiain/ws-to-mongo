@@ -32,7 +32,6 @@ enum severity_level
     ERROR,
     FATAL
 };
-// The formatting logic for the severity level
 template< typename CharT, typename TraitsT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
 {

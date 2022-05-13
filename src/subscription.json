@@ -7,10 +7,6 @@
     },
     {
       "channel": "candle1m",
-      "instId": "AVAX-USDT"
-    },
-    {
-      "channel": "candle1m",
       "instId": "ADA-USDT"
     },
     {
@@ -20,10 +16,6 @@
     {
       "channel": "candle1m",
       "instId": "SOL-USDT"
-    },
-    {
-      "channel": "candle1m",
-      "instId": "LUNA-USDT"
     },
     {
       "channel": "candle1m",

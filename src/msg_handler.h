@@ -23,6 +23,36 @@ using bsoncxx::builder::basic::kvp;
 using bsoncxx::builder::basic::make_document;
 using json = nlohmann::json;
 
+class ProducerConsumer{
+public:
+    ProducerConsumer() {}
+
+    void push(json& msg) {
+        boost::lock_guard<boost::mutex> lck(m);
+        queue.push_back(msg);
+    }
+
+    std::vector<json> pop_and_copy(){
+        boost::lock_guard<boost::mutex> lck(m);
+        std::vector<json> copy = queue;
+        std::vector<json> _c;
+        queue = _c;
+        return copy;
+    }
+
+    int size(){
+        boost::lock_guard<boost::mutex> lck(m);
+        return queue.size();
+    }
+
+private:
+    boost::mutex m;
+    std::vector<json> queue;
+};
+
+ProducerConsumer ProdCons;
+
+
 class MongoPusher{
 public:
     explicit MongoPusher (std::string &db_url){
@@ -38,11 +68,11 @@ public:
     }
     ~MongoPusher(){BOOST_LOG_SEV(lg, FATAL) << "MongoPusher died";};
 
-    void push_to_db(std::vector<json>* output_container){
+    void push_to_db(std::vector<json>& output_container){
 
         std::vector<bsoncxx::document::value> docs;
 
-        for(auto&& elem : *output_container) {
+        for(auto elem : output_container) {
             auto instId= elem["arg"]["instId"].get<std::string>();
             auto data = elem["data"].get<std::vector<std::vector<std::string>>>();
             bsoncxx::document::value document = make_document(
@@ -55,33 +85,23 @@ public:
                     kvp("vol_count", std::stof(data[0][5])),
                     kvp("vol_coin", std::stof(data[0][6]))
             );
-
             docs.push_back(document);
         };
-        std::vector<json> _c;
-        *output_container = _c;
         collection.insert_many(docs);
-
     };
 
-    void monitor(std::vector<json>* input_container, std::vector<json>* output_container){
+    void monitor(){
 
         try{
             while(true) {
-
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-                if (input_container->size() >= 10) {
-                    boost::lock_guard<boost::mutex> lck(m);
-                    *output_container = *input_container;
-                    std::vector<json> _c;
-                    *input_container = _c;
-                    push_to_db(output_container);
+                if (ProdCons.size() >= 10) {
+                    auto c = ProdCons.pop_and_copy();
+                    push_to_db(c);
                 };
-
             };
 
         }catch(const std::exception& e) {
-            BOOST_LOG_SEV(lg, ERROR) << e.what() << '\n';
             std::string st = boost::diagnostic_information(e);
             BOOST_LOG_SEV(lg, ERROR) << st << '\n';
             };
@@ -89,7 +109,6 @@ public:
         };
 
 private:
-    boost::mutex m;
     mongocxx::client client;
     mongocxx::collection collection;
     mongocxx::uri uri;
