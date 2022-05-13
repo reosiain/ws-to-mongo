@@ -59,7 +59,6 @@ int main() {
         json j = json::parse(ifs);
         std::string params = j.dump();
 
-        ProducerConsumer ProdCons;
         boost::barrier bar(2);
         boost::thread_group threads;
         threads.create_thread(boost::bind(&run_ws, url, params, boost::ref(bar)));
