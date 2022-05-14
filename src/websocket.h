@@ -3,6 +3,7 @@
 #define WS_TO_MONGO_WEBSOCKET_H
 
 #include "string"
+
 #include <nlohmann/json.hpp>
 #include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
@@ -52,13 +53,14 @@ void on_message (client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
         if (cond1 and cond2) {
             ProdCons.push(response);
         };
-//        if (((float) std::rand() / RAND_MAX) < 0.15) {
-//            // Ping every 15% of messages. Sorry
-//            c->ping(hdl, "ping");
-//        };
     }catch(json::out_of_range &e){
         BOOST_LOG_SEV(lg, ERROR) << e.what();
-    } ;
+    };
+    if (((float) std::rand() / RAND_MAX) < 0.15) {
+        // Ping every 15% of messages. Sorry
+        c->send(hdl, "ping", websocketpp::frame::opcode::text);
+        BOOST_LOG_SEV(lg, DEBUG) << "ping";
+    };
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
@@ -70,8 +72,8 @@ void on_close(client* c, websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Closed");
     c->close(hdl, websocketpp::close::status::normal, "");
     BOOST_LOG_SEV(lg, DEBUG) << "Connection Closed";
-
 }
+
 
 class Ws {
 public:
