@@ -50,7 +50,7 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
     return strm;
 }
 
-src::severity_logger< severity_level > lg;
+src::severity_logger_mt< severity_level > lg;
 
 void init_logging(std::string &filename){
 

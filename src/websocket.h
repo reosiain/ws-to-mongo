@@ -5,6 +5,7 @@
 #include "string"
 
 #include <nlohmann/json.hpp>
+#include <websocketpp/common/thread.hpp>
 #include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
 #include "msg_handler.h"
@@ -37,12 +38,21 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 }
 
 void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
-    c->send(hdl, params, websocketpp::frame::opcode::text);
-    BOOST_LOG_SEV(lg, INFO) << "Sent subscription params";
+    try{
+        c->send(hdl, params, websocketpp::frame::opcode::text);
+        BOOST_LOG_SEV(lg, INFO) << "Sent subscription params";
+    }catch(std::exception& e){
+        BOOST_LOG_SEV(lg, ERROR) << e.what();
+    }
+
 };
 
-
 void on_message (client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
+
+    if (msg->get_payload() == "pong"){
+        BOOST_LOG_SEV(lg, DEBUG) << "pong";
+        return;
+    };
 
     auto response = json::parse(msg->get_payload());
     BOOST_LOG_SEV(lg, INFO) << response;
@@ -55,11 +65,6 @@ void on_message (client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
         };
     }catch(json::out_of_range &e){
         BOOST_LOG_SEV(lg, ERROR) << e.what();
-    };
-    if (((float) std::rand() / RAND_MAX) < 0.15) {
-        // Ping every 15% of messages. Sorry
-        c->send(hdl, "ping", websocketpp::frame::opcode::text);
-        BOOST_LOG_SEV(lg, DEBUG) << "ping";
     };
 };
 
@@ -74,6 +79,15 @@ void on_close(client* c, websocketpp::connection_hdl hdl) {
     BOOST_LOG_SEV(lg, DEBUG) << "Connection Closed";
 }
 
+void ping(client* c, websocketpp::connection_hdl* hdl, boost::mutex* m){
+
+    while(true){
+        boost::this_thread::sleep(boost::posix_time::seconds(29));
+        boost::lock_guard<boost::mutex> lock(*m);
+        c->send(*hdl, "ping", websocketpp::frame::opcode::text);
+        BOOST_LOG_SEV(lg, DEBUG) << "ping";
+    }
+}
 
 class Ws {
 public:
@@ -120,10 +134,15 @@ public:
                 &m_endpoint,
                 websocketpp::lib::placeholders::_1
         ));
-        con->set_pong_timeout(10);
 
+        handle = con->get_handle();
         m_endpoint.connect(con);
-        m_endpoint.run();
+
+        websocketpp::lib::thread ws_thread(&client::run, &m_endpoint);
+        websocketpp::lib::thread ping_thread(&ping, &m_endpoint, &handle, &m_lock);
+
+        ws_thread.join();
+        ping_thread.join();
 
     }
 
@@ -131,6 +150,8 @@ private:
     std::string wss_address;
     std::string params;
     client m_endpoint;
+    websocketpp::connection_hdl handle;
+    boost::mutex m_lock;
     client::connection_ptr con;
 
 };
