@@ -13,7 +13,16 @@
 #include <boost/core/null_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/support/date_time.hpp>
+#include <boost/stacktrace.hpp>
+#include <boost/exception/all.hpp>
 
+typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+
+template <class E>
+void throw_with_trace(const E& e) {
+    throw boost::enable_error_info(e)
+            << traced(boost::stacktrace::stacktrace());
+}
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

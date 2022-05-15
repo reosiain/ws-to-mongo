@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 project(ws_to_mongo)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Debug)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(${CMAKE_SOURCE_DIR}/build/conanbuildinfo.cmake)
 conan_basic_setup()

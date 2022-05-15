@@ -33,6 +33,7 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
         ctx->set_verify_mode(boost::asio::ssl::verify_none);
     } catch (std::exception& e) {
         BOOST_LOG_SEV(lg, ERROR) << e.what();
+        throw;
     }
     return ctx;
 }
@@ -43,6 +44,7 @@ void on_open(client* c,websocketpp::connection_hdl hdl, std::string &params){ //
         BOOST_LOG_SEV(lg, INFO) << "Sent subscription params";
     }catch(std::exception& e){
         BOOST_LOG_SEV(lg, ERROR) << e.what();
+        throw;
     }
 
 };
@@ -65,12 +67,14 @@ void on_message (client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
         };
     }catch(json::out_of_range &e){
         BOOST_LOG_SEV(lg, ERROR) << e.what();
+        throw;
     };
 };
 
 void on_fail(client* c,websocketpp::connection_hdl hdl) {
     c->get_alog().write(websocketpp::log::alevel::app, "Connection Failed");
     BOOST_LOG_SEV(lg, FATAL) << "Connection Failed";
+
 }
 
 void on_close(client* c, websocketpp::connection_hdl hdl) {

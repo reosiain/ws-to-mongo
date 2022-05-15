@@ -5,6 +5,9 @@
  websocketpp/0.8.2
  mongo-cxx-driver/3.6.6
  nlohmann_json/3.10.5
+ backward-cpp/1.6
+ libdwarf/20191104
+ libelf/0.8.13
 
  [generators]
  cmake

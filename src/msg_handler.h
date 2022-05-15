@@ -104,6 +104,7 @@ public:
         }catch(const std::exception& e) {
             std::string st = boost::diagnostic_information(e);
             BOOST_LOG_SEV(lg, ERROR) << st << '\n';
+            throw;
             };
 
         };
